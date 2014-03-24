@@ -1,4 +1,4 @@
-typographics
+Typographics
 ============
 
 Experiments with types and code

@@ -4,225 +4,136 @@
 	<title>typo demo</title>
 	<meta name="author" content="Pedro Ha">
 
-	<script src="setup.js" type="text/javascript"></script>
-	<script src="svg_parser.js" type="text/javascript"></script>
-	
-	<script>
-  // requestAnim shim layer by Paul Irish
-    window.requestAnimFrame = (function(){
-      return  window.requestAnimationFrame       || 
-              window.webkitRequestAnimationFrame || 
-              window.mozRequestAnimationFrame    || 
-              window.oRequestAnimationFrame      || 
-              window.msRequestAnimationFrame     || 
-              function(/* function */ callback, /* DOMElement */ element){
-                window.setTimeout(callback, 1000 / 60);
-              };
-    })();
-  </script>
+	<style>
 
+		html, body {
+			margin: 0;
+			padding: 0;
+			background-color: black;
+		}
+
+		canvas {
+			width: 100%;
+		}
+
+		canvas,
+		.sidebar {
+			position: absolute;
+		}
+
+		.sidebar {
+			top: 0;
+			right: 0;
+			margin: 10px;
+			padding: 10px;
+			border-radius: 10px;
+			background-color: rgba(255, 255, 255, 0.4);
+		}
+
+		label, h2 {
+			font-family: Georgia;
+			font-size: 18px;
+		}
+
+	</style>
 </head>
 
 <body>
 
-	<canvas id="canvas" width="2000" height="2000"></canvas>
+	<canvas id="canvas" width="800" height="800"></canvas>
 
+	<div class="sidebar">
+		<div>
+			<h2>Intensity</h2>
+			<input type="range" min="5" max="30" value="5" step="1" id="intensity">		
+		</div>
+		<div>
+			<h2>Richness</h2>
+			<input type="range" min="5" max="20" value="10" step="1" id="richness">
+		</div>
+		<div>
+			<h2>Noise</h2>
+			<input type="range" min="1" max="100" value="50" step="1" id="noise">		
+		</div>
+		<div>
+			<h2>Speed</h2>
+			<input type="range" min="66" max="100" value="100" step="1" id="speed">		
+		</div>
+	</div>
+
+	<script src="polyline.js"></script>
+	<script src="svg_parser.js"></script>
 	<script>
 
-		var state = {
-			intensity: 10,
-			richness: 5,
-			noise: 20,
-			xx: 800
-		};
+		"use strict";
 
-		var stateKeyHandler = function(evt) {
-			var code = String.fromCharCode(evt.keyCode);
-			if (code === 'i') {
-				state.intensity--;
-			} else if (code === 'I') {
-				state.intensity++;
-			}
-			else
-			if (code === 'r') {
-				state.richness--;
-			}
-			else if (code === 'R') {
-				state.richness++;
-			}
-			else
-			if (code === 'n') {
-				state.noise--;
-			}
-			else if (code === 'N') {
-				state.noise++;
-			}
-			state.intensity = Math.max(5, state.intensity);
-			state.richness = Math.max(5, state.richness);
-			state.noise = Math.max(1, state.noise);
-			console.log(JSON.stringify(state));
-		};
+		var setListeners = function(state) {
 
-		window.onkeypress = stateKeyHandler;
-
-		var level4 = true;
-		var level5 = true;
-
-		var canvas = document.getElementById("canvas");
-		var c = canvas.getContext("2d");
-		//http://www.robertpenner.com/easing_terms_of_use.html
-		
-		c.save();
-
-	    //c.fillStyle = "hsl(90, 100%,50%)";
-	    //c.fillRect(0, 0, 2000, 2000);
-
-		//c.translate(0, 800); // ascent /// Just the "ascent" needs to be translated
-        //c.scale(1, -1);
-        
-		c.translate(100, 650); // ascent /// Just the "ascent" needs to be translated
-        c.scale(0.4, -0.4);
-
-        var A = "M527 17Q497 34 473 93Q435 184 374 411Q357 471 347 509T332 563Q322 599 316 630T304 687L294 692Q257 655 186 634L182 623Q190 610 195 601T202 583Q191 542 187 532L118 296Q106 254 91 209T57 116Q31 48 -2 15L1 1Q33 8 70 8Q108 8 148 0L153 20Q95 36 95 94Q95 153 122 219Q153 241 218 241Q268 241 313 226Q344 123 344 87Q344 43 294 17L298 0Q329 7 358 10T414 13Q467 13 523 1L527 17ZM302 261Q277 265 257 267T223 269Q171 269 131 254Q189 444 218 539Q226 519 235 492T255 427L302 261Z";
-
-        var G = "M474 -46Q471 48 471 82V152V170Q470 177 470 182Q470 188 470 193V222L457 231Q430 225 385 225Q375 225 357 226T309 229Q296 230 290 230T284 231V211H294Q339 205 354 176Q364 157 364 102Q364 47 307 47Q212 47 163 170Q125 266 125 371Q125 465 158 542Q201 642 286 642Q324 642 324 612Q324 610 323 606T320 595T317 584T315 575Q315 554 332 539T371 524Q399 524 418 542T437 589Q437 631 395 655Q360 675 315 675Q186 675 97 538Q18 417 18 281Q18 161 72 85Q133 -2 247 -2Q296 -2 352 22Q385 37 401 37Q445 37 458 -48L474 -46Z";
-
-        var C = "M446 152Q446 175 426 175Q410 175 409 147Q409 124 400 105T376 71T340 48T297 39Q241 39 195 100Q124 195 124 367Q124 458 157 536Q200 639 279 639Q324 639 324 612Q324 607 321 597Q315 577 315 565Q315 545 332 531T372 517Q399 517 416 535T434 581Q434 624 395 648Q362 669 316 669Q185 669 96 532Q19 411 19 272Q19 156 72 79Q132 -9 243 -9Q343 -9 404 64Q446 115 446 152Z";
-
-        var T = "M505 685L488 689Q465 669 449 663Q442 661 431 660T402 658L254 655Q204 654 179 654T152 653Q88 653 69 661Q57 666 49 687H30Q20 584 -3 500H16Q45 571 81 600Q117 630 191 632V341L187 185Q186 149 186 131T185 111Q182 70 173 54Q160 30 126 17L132 0Q178 13 248 13Q309 13 360 0L366 21Q301 39 303 153Q304 198 304 226Q304 254 305 268Q306 285 306 292Q306 299 306 295V232V632Q386 631 416 610Q451 584 451 508V500H470Q474 542 482 588T505 685Z";
-		
-        var canvasDrawer = new JF.PolyLineSegmentorSvgCanvasExecutor(10, 30);
-	    var parser = new JF.SvgPathParser();
-	    
-	    canvasDrawer.group('A'); parser.parse(A, canvasDrawer); 
-	    canvasDrawer.group('T'); parser.parse(T, canvasDrawer); 
-	    canvasDrawer.group('C'); parser.parse(C, canvasDrawer); 
-	    canvasDrawer.group('G'); parser.parse(G, canvasDrawer);
-
-	    /*
-	    canvasDrawer.translate('A', 0, 0);
-	    canvasDrawer.translate('T', 800, 0);
-	    canvasDrawer.translate('C', 0, -800);
-	    canvasDrawer.translate('G', 800, -800);
-	    */
-
-	    
-	    c.fillStyle = "white";
-	    c.lineWidth = 20;
-	    c.lineCap = "round";
-	    c.lineJoin = "round";
-	    c.stroke();
-	    c.fill();
-
-	    if (typeof canvasDrawer.getPolyLines === "function") {
-
-			c.strokeStyle = "#cf7";
-			//c.fillStyle = "#cf7";
-
-			function drawOutlines(color, intensity, richness, noise) {
-
-				c.lineWidth = intensity;
-
-				var xMaxNoise = noise;
-				var yMaxNoise = noise;
-
-				var line = function(c, x, y, toX, toY) {
-					c.beginPath();
-					if (1) {
-						x = x + (Math.random()-0.5) * xMaxNoise;
-						y = y + (Math.random()-0.5) * yMaxNoise;
-						toX = toX + (Math.random()-0.5) * xMaxNoise;
-						toY = toY + (Math.random()-0.5) * yMaxNoise;					
-					}
-					c.moveTo(x, y);
-					c.lineTo(toX, toY);
-					c.stroke();
+			var setSliderListener = function(sliderId) {
+				var dom = document.getElementById(sliderId);
+				dom.onchange = function() {
+					console.log(sliderId + ":" + dom.value);
+					state[sliderId] = dom.value;
 				};
+			};
 
-				var xx = state.xx;
+			var sliders = ['intensity', 'richness', 'noise', 'speed'];
 
-		    	canvasDrawer.translate('A', 800-xx, 0);
-		    	canvasDrawer.translate('T', xx, 0);
-		    	canvasDrawer.translate('C', 800-xx, -800);
-		    	canvasDrawer.translate('G', xx, -800);
-
-		    	var polylines = canvasDrawer.getPolyLines();
-
-				c.fillStyle = "black";
-				c.fillRect(-200, -1000, 2000, 2000);
-
-				var maxLength = 0;
-
-				var dist = richness;
-
-		    	for (var j = 0; j < polylines.length; j++) {
-		    		var polyline = polylines[j];
-					var endpoints = polyline.get();
-					var r1 = Math.floor(Math.random() * dist);
-					var r2 = Math.floor(Math.random() * dist);
-
-					if (level4) {
-		 				c.strokeStyle = color; //"red"; //"#cf7";
-						for (var i = 0; i < endpoints.length-dist-1; i++) {
-							line(c, endpoints[i].x, endpoints[i].y, endpoints[i+1+r1].x, endpoints[i+1+r2].y);
-						}
-						maxLength = Math.max(maxLength, endpoints.length);
-					}
-				}
-
-		    	for (var j = 0; j < polylines.length; j++) {
-		    		var polyline = polylines[j];
-					var endpoints = polyline.get();
-
-					var p = endpoints[0];
-
-					if (level4) {
-		 				c.strokeStyle = color; //"red"; //"#cf7";
-						for (var i = 1; i < endpoints.length; i++) {
-							n = endpoints[i];
-							line(c, p.x, p.y, n.x, n.y);
-							p = n;
-						}
-						maxLength = Math.max(maxLength, endpoints.length);
-					}
-		    	}
+			for (var i = 0; i < sliders.length; i++) {
+				var sliderId = sliders[i];
+				setSliderListener(sliderId);
 			}
 
-			var forward = true;
-			var iter = 0;
+			var getKeyFromEvent = function(event) {
+				var chr = event.which || event.keyCode;
+				var code = String.fromCharCode(chr);
+				return code;
+			};
 
-            // Slow it down... otherwise anim is too fast.
-			window.requestAnimFrame = function(callback) {
-                window.setTimeout(callback, 100); 
-            };
+			var stateKeyHandler = function(event) {
+				var code = getKeyFromEvent(event);
+				// console.log(event);
 
-			function draw() {
-				requestAnimFrame(draw);
-
-				var color = (iter%2) ? '#aaa': '#ccc';
-				drawOutlines(color, state.intensity, state.richness, state.noise);
-				iter++;
-
-				if (forward)
-					state.xx -= 8;
+				if (code === 'i') {
+					state.intensity--;
+				} else if (code === 'I') {
+					state.intensity++;
+				}
 				else
-					state.xx += 8;
-
-				if (state.xx < 0) {
-					forward = false;
-					state.xx = 0;
+				if (code === 'r') {
+					state.richness--;
 				}
-				if (state.xx > 800) {
-					forward = true;
-					state.xx = 800;
+				else if (code === 'R') {
+					state.richness++;
 				}
-			}
+				else
+				if (code === 'n') {
+					state.noise--;
+				}
+				else if (code === 'N') {
+					state.noise++;
+				}
+				state.intensity = Math.max(5, state.intensity);
+				state.richness = Math.max(5, state.richness);
+				state.noise = Math.max(1, state.noise);
+				console.log(JSON.stringify(state));
+			};
 
-			draw();
-	    }
-	    // c.restore(); // To start clipping against shape!
+			window.onkeypress = stateKeyHandler;
+		};
+
+		var state = {
+			intensity: 5,
+			richness: 10,
+			noise: 50,
+			speed: 100
+		};
+
+		setListeners(state);
 
 	</script>
+
+	<script src="drawing.js"></script>
 
 </body>
 </html>

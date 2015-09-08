@@ -61,6 +61,26 @@ JF.extends( function() {
 
 */
 
+"use strict";
+
+;(function() {
+
+var error, warn, debug, info, prog; // log: redefinition of log()?
+
+if (!error) {
+	error = warn = debug = info = function (msg) {
+		if (typeof console !== "undefined") {
+			console.log(msg);
+		}
+	};
+}
+
+if (!prog) {
+	prog = function (msg) { // Programmer error, not user error
+		alert(msg);
+	};
+}
+
 JF.debug = {
 	show_coordinates : false,
 	start_glyph : false,
@@ -465,3 +485,5 @@ JF.SvgPathParser = function() {
 		}
 	};
 };
+
+})();

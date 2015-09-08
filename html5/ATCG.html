@@ -12,8 +12,16 @@
 			background-color: black;
 		}
 
-		canvas {
-			width: 100%;
+		@media all and (orientation:portrait) {
+			canvas {
+				width: 100%;
+			}
+		}
+
+		@media all and (orientation:landscape) {
+			canvas {
+				height: 100%;
+			}
 		}
 
 		canvas,
